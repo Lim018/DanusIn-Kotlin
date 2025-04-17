@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DanusIn</string>
+    <string name="welcome_message">Selamat Datang di DanusIn - Pasar Kampus Digital</string>
+    <string name="app_logo">Logo DanusIn</string>
+</resources>

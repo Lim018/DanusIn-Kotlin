@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M60,60m-55,0a55,55 0,1 1,110 0a55,55 0,1 1,-110 0" />
+
+    <!-- Letter D -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,35L60,35C75,35 85,45 85,60C85,75 75,85 60,85L40,85L40,35ZM50,45L50,75L60,75C70,75 75,70 75,60C75,50 70,45 60,45L50,45Z" />
+
+    <!-- Small shopping bag icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,40L95,40L95,45L92,60L88,60L85,45L85,40ZM86,62C86,64.2 84.2,66 82,66C79.8,66 78,64.2 78,62C78,59.8 79.8,58 82,58C84.2,58 86,59.8 86,62Z" />
+</vector>
