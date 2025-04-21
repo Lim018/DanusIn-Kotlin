@@ -11,7 +11,7 @@
     <string name="nav_orders">Pesanan</string>
 
     <!-- Categories -->
-    <string name="categories">Kategori</string>
+    <string name="categories">Semua</string>
     <string name="category_food">Makanan</string>
     <string name="category_drink">Minuman</string>
     <string name="category_craft">Kerajinan</string>
@@ -31,4 +31,18 @@
     <string name="about_product">Tentang Produk</string>
     <string name="delivery_time">%d menit</string>
     <string name="calories">%d Kcal</string>
+
+    <!-- Authentication -->
+    <string name="login">Masuk</string>
+    <string name="register">Daftar</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Konfirmasi Password</string>
+    <string name="remember_me">Ingat Saya</string>
+    <string name="buyer">Pembeli</string>
+    <string name="seller">Penjual</string>
+    <string name="login_as">Masuk sebagai:</string>
+    <string name="register_as">Daftar sebagai:</string>
+    <string name="have_account">Sudah punya akun?</string>
+    <string name="no_account">Belum punya akun?</string>
 </resources>

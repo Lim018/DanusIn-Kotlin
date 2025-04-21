@@ -12,10 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,10 +29,17 @@ import androidx.compose.ui.unit.sp
 import com.example.danusin.models.Category
 import com.example.danusin.models.Product
 import com.example.danusin.ui.theme.PrimaryColor
+import com.example.danusin.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onProductClick: (Product) -> Unit) {
+fun HomeScreen(
+    authViewModel: AuthViewModel,
+    onProductClick: (Product) -> Unit,
+    onProfileClick: () -> Unit
+) {
+    val uiState by authViewModel.uiState.collectAsState()
+
     val categories = listOf(
         Category(1, R.string.category_food, R.drawable.ic_food),
         Category(2, R.string.category_drink, R.drawable.ic_drink),
@@ -45,18 +49,58 @@ fun HomeScreen(onProductClick: (Product) -> Unit) {
         Category(6, R.string.category_others, R.drawable.ic_others)
     )
 
-    val featuredProducts = listOf(
+    val allProducts = listOf(
         Product(1, "Nasi Goreng Spesial", "15000", R.drawable.product_1, 4.5f, 20, 120),
         Product(2, "Es Teh Manis", "5000", R.drawable.product_2, 4.3f, 15, 200),
         Product(3, "Gantungan Kunci Kampus", "10000", R.drawable.product_3, 4.7f, 30, 50),
-        Product(4, "Kaos Kampus", "75000", R.drawable.product_4, 4.9f, 45, 80)
+        Product(4, "Kaos Kampus", "75000", R.drawable.product_4, 4.9f, 45, 80),
+        Product(5, "Mie Ayam Bakso", "20000", R.drawable.product_1, 4.6f, 25, 150),
+        Product(6, "Jus Alpukat", "12000", R.drawable.product_2, 4.4f, 10, 90),
+        Product(7, "Topi Kampus", "35000", R.drawable.product_4, 4.2f, 35, 40),
+        Product(8, "Stiker Kampus", "3000", R.drawable.product_3, 4.8f, 5, 300)
     )
 
     var selectedCategoryIndex by remember { mutableStateOf(0) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+
+    val filteredProducts = remember(searchQuery, selectedCategoryIndex) {
+        allProducts.filter { product ->
+            val matchesSearch = if (searchQuery.isBlank()) true else
+                product.name.contains(searchQuery, ignoreCase = true)
+
+            val matchesCategory = if (selectedCategoryIndex == 0) true else {
+                when (selectedCategoryIndex) {
+                    1 -> product.name.contains("Nasi", ignoreCase = true) ||
+                            product.name.contains("Mie", ignoreCase = true)
+                    2 -> product.name.contains("Teh", ignoreCase = true) ||
+                            product.name.contains("Jus", ignoreCase = true)
+                    3 -> product.name.contains("Gantungan", ignoreCase = true) ||
+                            product.name.contains("Stiker", ignoreCase = true)
+                    4 -> product.name.contains("Kaos", ignoreCase = true) ||
+                            product.name.contains("Topi", ignoreCase = true)
+                    else -> false
+                }
+            }
+
+            matchesSearch && matchesCategory
+        }
+    }
 
     Scaffold(
         topBar = {
-            HomeAppBar()
+            if (isSearchActive) {
+                SearchTopBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onCloseSearch = { isSearchActive = false }
+                )
+            } else {
+                HomeAppBar(
+                    onSearchClick = { isSearchActive = true },
+                    onProfileClick = onProfileClick
+                )
+            }
         },
         bottomBar = {
             BottomNavigation()
@@ -68,22 +112,92 @@ fun HomeScreen(onProductClick: (Product) -> Unit) {
                 .padding(paddingValues)
                 .background(Color(0xFFF9F9F9))
         ) {
-            // Search Bar
-            SearchBar()
-
             // Categories
             CategorySection(categories, selectedCategoryIndex) { index ->
                 selectedCategoryIndex = index
             }
 
             // Products Grid
-            ProductsGrid(featuredProducts, onProductClick)
+            if (filteredProducts.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Tidak ada produk yang ditemukan",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            } else {
+                ProductsGrid(filteredProducts, onProductClick)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchTopBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onCloseSearch: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onCloseSearch) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+
+            TextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = { Text("Cari produk...") },
+                singleLine = true,
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear"
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun HomeAppBar() {
+fun HomeAppBar(
+    onSearchClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,63 +238,25 @@ fun HomeAppBar() {
                 }
             }
 
-            // Profile Image
-            Image(
-                painter = painterResource(id = R.drawable.profile_image),
-                contentDescription = "Profile",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-        }
-    }
-}
+            Row {
+                // Search Icon
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.Gray
+                    )
+                }
 
-@Composable
-fun SearchBar() {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Cari Produk...",
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = PrimaryColor.copy(alpha = 0.1f),
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_filter),
-                    contentDescription = "Filter",
-                    tint = PrimaryColor,
+                // Profile Image
+                Image(
+                    painter = painterResource(id = R.drawable.profile_image),
+                    contentDescription = "Profile",
                     modifier = Modifier
-                        .padding(6.dp)
-                        .size(20.dp)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onProfileClick() },
+                    contentScale = ContentScale.Crop
                 )
             }
         }
@@ -198,11 +274,20 @@ fun CategorySection(categories: List<Category>, selectedIndex: Int, onCategorySe
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Add "All" category
+            item {
+                CategoryChip(
+                    category = Category(0, R.string.categories, R.drawable.ic_all),
+                    isSelected = selectedIndex == 0,
+                    onClick = { onCategorySelected(0) }
+                )
+            }
+
             items(categories.size) { index ->
                 CategoryChip(
                     category = categories[index],
-                    isSelected = selectedIndex == index,
-                    onClick = { onCategorySelected(index) }
+                    isSelected = selectedIndex == index + 1,
+                    onClick = { onCategorySelected(index + 1) }
                 )
             }
         }
